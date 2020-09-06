@@ -6,8 +6,7 @@ import difflib
 
 def index_from_title(title):
     title_list = df['title'].tolist()
-    common = difflib.get_close_matches(title, title_list, 1)
-    titlesim = common[0]
+    titlesim = difflib.get_close_matches(title, title_list, 1)[0]
     return df[df.title == titlesim]["index"].values[0]
 
 def title_from_index(index):
@@ -18,31 +17,32 @@ df = pd.read_csv("moviedata.csv")
 features = ['genres', 'keywords', 'cast', 'director', 'tagline']
 
 for feature in features:
-    df[feature] = df[feature].fillna('')
+    df[feature] = df[feature].fillna("")
 
 def combine_features(row):
     try:
-        return row['keywords'] + " " + row['genres'] + " " + row["cast"] + " " + row["tagline"] + " " + row["director"]
+        return row['keywords'] + " " + row['genres'] + " " + row['cast'] + " " + row['director'] + " " + row['tagline']
     except:
-        print ("Error:", row)
+        print("Error:", row)
 
 df["combined_features"] = df.apply(combine_features, axis=1)
 
+
+
+user_movie = input("Favorite movie: ") 
+user_movie_index = index_from_title(user_movie)
+
 cv = CountVectorizer()
 count_matrix = cv.fit_transform(df["combined_features"])
-
 cosine_sim = cosine_similarity(count_matrix)
 
-user_movie = input("Enter movie title:\t")
-movie_index = index_from_title(user_movie)
-
-similar_movies = list(enumerate(cosine_sim[movie_index]))
-similar_movies_sorted = sorted(similar_movies, key = lambda x:x[1], reverse = True)
+similar_movies = list(enumerate(cosine_sim[user_movie_index]))
+similar_movies_sorted = sorted(similar_movies, key = lambda x:x[1], reverse=True)
 
 i = 0
-for element in similar_movies_sorted:
-    print (title_from_index(element[0]))
-    i+=1
-    if i > 50:
+for index in similar_movies_sorted:
+    print (title_from_index(index[0]))
+    i += 1
+    if i > 25:
         break
 
